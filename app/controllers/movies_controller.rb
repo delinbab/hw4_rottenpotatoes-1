@@ -1,9 +1,20 @@
 class MoviesController < ApplicationController
 
   def show
-    id = params[:id] # retrieve movie ID from URI route
+    id = params[:id].to_i # retrieve movie ID from URI route
     @movie = Movie.find(id) # look up movie by unique ID
     # will render app/views/movies/show.<extension> by default
+  end
+
+  def same_director
+    movie_itself = Movie.find(params[:id].to_i)
+    if movie_itself.try(:director).blank?
+      flash[:notice] = "'#{movie_itself.try(:title) || "(no title found)"}' has no director info"
+      redirect_to root_url
+    else
+      @movies = Movie.with_same_director(movie_itself.director)
+      @movie_name = movie_itself.title
+    end
   end
 
   def index
@@ -51,7 +62,7 @@ class MoviesController < ApplicationController
   end
 
   def update
-    @movie = Movie.find params[:id]
+    @movie = Movie.find params[:id].to_i
     @movie.update_attributes!(params[:movie])
     flash[:notice] = "#{@movie.title} was successfully updated."
     redirect_to movie_path(@movie)
